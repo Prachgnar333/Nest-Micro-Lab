@@ -1,13 +1,17 @@
-import { Controller } from '@nestjs/common';
-import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
+// orders.controller.ts
+import { Controller, Logger } from '@nestjs/common';
 import { OrdersService } from './orders.service';
+import { EventPattern } from '@nestjs/microservices';
 
-@Controller()
+@Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  private readonly logger = new Logger(OrdersController.name);
 
+  constructor(private readonly ordersService: OrdersService) {} // Inject the service
+
+  // The event listener goes here
   @EventPattern('order_created')
-  handleOrderCreated(@Payload() data: any, @Ctx() context: RmqContext) {
-    this.ordersService.processOrder(data, context);
+  handleOrderCreated() {
+    console.log(`Received order_created event in controller.`);
   }
 }

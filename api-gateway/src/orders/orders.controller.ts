@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Post } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 
 @Controller('orders')
@@ -9,4 +9,10 @@ export class OrdersController {
   create(@Body() body: any) {
     return this.ordersService.createOrder(body);
   }
+
+  @Delete()
+  delete(){
+    return this.ordersService.deleteOrder();
+  }
+  
 }

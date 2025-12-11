@@ -10,8 +10,14 @@ export class OrdersService {
   async createOrder(orderDto: any) {
     // In real life we might validate or save to DB first
     // Here we just emit an event
-    await this.client.emit('order_created', orderDto).toPromise();
+    await this.client.emit('order_created', "");
     return { status: 'Order accepted', order: orderDto };
   }
+
+  deleteOrder() {
+    this.client.emit('order_deleted', 'aaa');
+    return { status: 'Order deleted' };
+  }
+
 }
 
