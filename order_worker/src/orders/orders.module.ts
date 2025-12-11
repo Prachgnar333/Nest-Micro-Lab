@@ -1,10 +1,15 @@
-// orders.module.ts
+// orders/orders.module.ts
 import { Module } from '@nestjs/common';
-import { OrdersService } from './orders.service'; // <--- Import the controller
+import { TypeOrmModule } from '@nestjs/typeorm'; // <--- NEW IMPORT
+import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
+import { Order } from './order.entity'; // <--- NEW IMPORT
 
 @Module({
-  controllers: [OrdersController], // <--- Declare the controller here
+  imports: [
+    TypeOrmModule.forFeature([Order]), // <--- Register the Order Entity
+  ],
+  controllers: [OrdersController],
   providers: [OrdersService],
 })
 export class OrdersModule {}

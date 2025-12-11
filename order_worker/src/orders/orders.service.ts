@@ -1,22 +1,37 @@
-// orders.service.ts
+// orders/orders.service.ts
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm'; // <--- NEW IMPORT
+import { Repository } from 'typeorm';
+import { Order } from './order.entity'; // <--- NEW IMPORT
 
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
-  private readonly processedOrders: any[] = []; // simple "DB"
+  
+  // Inject the TypeORM Repository for the Order entity
+  constructor(
+    @InjectRepository(Order)
+    private orderRepository: Repository<Order>, // <--- NEW INJECTION
+  ) {}
 
   // This is the business logic function called by the controller
-  processOrder(data: any): void { 
+  async processOrder(data: any): Promise<void> { // Made async
     this.logger.log(`Processing order: ${JSON.stringify(data)}`);
-    this.processedOrders.push({
-      ...data,
-      processedAt: new Date().toISOString(),
+    
+    // Create a new Order entity
+    const newOrder = this.orderRepository.create({
+      data: data,
     });
+
+    // Save the new entity to the database
+    await this.orderRepository.save(newOrder); // <--- DB SAVE OPERATION
+    
+    this.logger.log(`Order with ID ${newOrder.id} successfully saved to Postgres.`);
   }
   
-  // Method to view "DB" in logs (useful for debugging)
-  printAll(): void {
-    this.logger.log(`All processed orders: ${JSON.stringify(this.processedOrders)}`);
+  // Method to view all orders (for debugging)
+  async printAll(): Promise<void> {
+    const allOrders = await this.orderRepository.find();
+    this.logger.log(`All processed orders: ${JSON.stringify(allOrders)}`);
   }
 }
