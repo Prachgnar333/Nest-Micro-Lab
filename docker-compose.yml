@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -10,9 +12,10 @@ services:
       RABBITMQ_DEFAULT_PASS: admin
 
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile.dev
     container_name: api-gateway
-    command: npm run start:dev
     ports:
       - "3000:3000"
     environment:
@@ -20,7 +23,6 @@ services:
       CHOKIDAR_USEPOLLING: "true"
     volumes:
       - ./api-gateway:/app
-      - /app/node_modules
     depends_on:
       - rabbitmq
 
@@ -47,27 +49,6 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  # --- NEW PGADMIN SERVICE ---
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin
-    restart: always
-    environment:
-      # These are the credentials you will use to log into the pgAdmin web interface
-      PGADMIN_DEFAULT_EMAIL: admin@orderworker.com 
-      PGADMIN_DEFAULT_PASSWORD: password
-    ports:
-      # Maps host port 5050 to the container's port 80
-      - "5050:80" 
-    volumes:
-      # Persist pgAdmin's configuration and server lists
-      - pgadmin_data:/var/lib/pgadmin
-    depends_on:
-      - postgres
-  # ---------------------------
-
-# ... (existing volumes definition)
-
 volumes:
   pgdata:
-  pgadmin_data: # <--- NEW VOLUME
+  # pgadmin_data: # <--- NEW VOLUME

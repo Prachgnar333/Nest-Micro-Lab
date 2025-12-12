@@ -6,7 +6,7 @@ export class ReceiptsController {
   constructor(private readonly receiptsService: ReceiptsService) {}
   @Get()
   getReceipts(): string {
-    return this.receiptsService.hello();
-    // return { message: 'List of receipts 6555' };
+    // return this.receiptsService.hello();
+    return 'List of receipts 88';
   }
 }
