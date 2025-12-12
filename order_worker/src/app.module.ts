@@ -3,6 +3,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm'; // <-- 1. Import TypeOrmModule
 import { OrdersModule } from './orders/orders.module';
+import { ReceiptsModule } from './receipts/receipts.module';
 
 @Module({
   imports: [

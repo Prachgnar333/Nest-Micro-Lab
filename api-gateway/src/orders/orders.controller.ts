@@ -11,8 +11,7 @@ export class OrdersController {
   }
 
   @Delete()
-  delete(){
+  delete() {
     return this.ordersService.deleteOrder();
   }
-  
 }
