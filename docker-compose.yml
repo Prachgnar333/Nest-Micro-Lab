@@ -21,6 +21,7 @@ services:
     environment:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       CHOKIDAR_USEPOLLING: "true"
+      API_KEY: "your-secret-api-key-123"
     volumes:
       - ./api-gateway:/app
     depends_on:
