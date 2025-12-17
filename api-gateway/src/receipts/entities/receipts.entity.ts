@@ -1,16 +1,16 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { PrimaryGeneratedColumn, Column, Entity } from 'typeorm';
 
-@Entity('receipts')
+@Entity('receipt')
 export class Receipt {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  receiptId: string;
 
-  @Column()
+  @Column({ type: 'timestamptz', nullable: false })
   issuedAt: Date;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255, nullable: false })
   name: string;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column({ type: 'numeric', nullable: false })
   price: number;
 }

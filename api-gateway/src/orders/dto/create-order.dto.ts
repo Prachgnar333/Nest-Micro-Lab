@@ -1,13 +1,18 @@
-import { IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  Min,
+} from 'class-validator';
 
-export class CreateOrderDto {
+export class CreateReceiptDto {
+  @IsDateString()
+  issuedAt: string;
+
   @IsString()
   @IsNotEmpty()
-  productName: string;
-
-  @IsNumber()
-  @Min(1)
-  quantity: number;
+  name: string;
 
   @IsNumber()
   @Min(0)
