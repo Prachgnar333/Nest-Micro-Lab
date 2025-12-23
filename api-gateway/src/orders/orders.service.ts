@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { NotificationsService } from 'src/notifications/notifications.service';
@@ -13,14 +12,20 @@ export class OrdersService {
   ) {}
 
   createOrder(orderDto: any) {
-    // In real life we might validate or save to DB first
-    // Here we just emit an event
-    this.client.emit('order_created', '');
-    this.paymentsService.hello();
-    this.notifications.notify('order_created', {
-      message: 'hello',
+    this.client.emit('order_created', {
+      order: orderDto,
+      createdAt: new Date().toISOString(),
     });
-    return { status: 'Order accepted', orderDto };
+
+    this.paymentsService.hello();
+
+    // ✅ Notify using the orders feature config
+    this.notifications.notify('orders', 'order_created', {
+      order: orderDto,
+      createdAt: new Date().toISOString(),
+    });
+
+    return { status: 'Order accepted', order: orderDto };
   }
 
   deleteOrder() {

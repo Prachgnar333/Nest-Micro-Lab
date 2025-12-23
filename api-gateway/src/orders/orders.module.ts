@@ -19,7 +19,12 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
         },
       },
     ]),
-    forwardRef(() => NotificationsModule),
+    // ✅ Configure feature-specific notification settings with forFeature()
+    NotificationsModule.forFeature({
+      featureName: 'orders',
+      prefix: '[ORDERS]',
+      channels: ['log', 'telegram'], // override global default
+    }),
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

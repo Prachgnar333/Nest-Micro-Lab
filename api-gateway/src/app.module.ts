@@ -9,10 +9,15 @@ import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
+    // ✅ Configure global notification settings with forRoot() - CALLED ONCE
+    NotificationsModule.forRoot({
+      appName: 'API Gateway Lab',
+      defaultChannel: 'log',
+      enable: true,
+    }),
     OrdersModule,
     ReceiptsModule,
     PaymentsModule,
-    NotificationsModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'postgres',
