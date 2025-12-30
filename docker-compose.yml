@@ -22,10 +22,16 @@ services:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       CHOKIDAR_USEPOLLING: "true"
       API_KEY: "your-secret-api-key-123"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: nest_lab
     volumes:
       - ./api-gateway:/app
     depends_on:
       - rabbitmq
+      - postgres
 
   # order-worker:
   #   build: ./order-worker
@@ -38,13 +44,15 @@ services:
   #     - /app/node_modules
   #   depends_on:
   #     - rabbitmq
+
+  # ✅ UPDATED: PostgreSQL for Practice 9
   postgres:
     image: postgres:16
-    container_name: postgres
+    container_name: nest-lab-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: order-worker
+      POSTGRES_DB: nest_lab
     ports:
       - "5432:5432"
     volumes:
@@ -52,4 +60,3 @@ services:
 
 volumes:
   pgdata:
-  # pgadmin_data: # <--- NEW VOLUME
