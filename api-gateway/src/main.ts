@@ -13,6 +13,7 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(process.env.PORT ?? 3001);
+  await app.listen(3000);
+  console.log('🚀 API Gateway running on http://localhost:3000');
 }
 bootstrap();

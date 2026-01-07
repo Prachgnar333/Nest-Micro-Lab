@@ -1,13 +1,17 @@
+// orders/orders.module.ts - UPDATED
 import { forwardRef, Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
 import { PaymentsModule } from 'src/payments/payments.module';
 import { NotificationsModule } from 'src/notifications/notifications.module';
+import { CustomersModule } from 'src/modules/customers/customers.module';
+import { VerifyOrderCustomerPipe } from './pipes/verify-order-customer.pipe'; // ✅ NEW
 
 @Module({
   imports: [
     forwardRef(() => PaymentsModule),
+    CustomersModule,
     ClientsModule.register([
       {
         name: 'ORDERS_SERVICE',
@@ -19,15 +23,17 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
         },
       },
     ]),
-    // ✅ Configure feature-specific notification settings with forFeature()
     NotificationsModule.forFeature({
       featureName: 'orders',
       prefix: '[ORDERS]',
-      channels: ['log', 'telegram'], // override global default
+      channels: ['log', 'telegram'],
     }),
   ],
   controllers: [OrdersController],
-  providers: [OrdersService],
+  providers: [
+    OrdersService,
+    VerifyOrderCustomerPipe, // ✅ Register
+  ],
   exports: [OrdersService],
 })
 export class OrdersModule {}

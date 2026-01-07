@@ -1,6 +1,8 @@
+// modules/product/dto/create-product.dto.ts
 import { IsNumber, IsString, IsUUID, Min, MinLength } from 'class-validator';
 
 export class CreateProductDto {
+  // ✅ Add 'export'
   @IsString()
   @MinLength(2)
   name: string;

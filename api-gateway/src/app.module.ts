@@ -8,16 +8,17 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { DatabaseModule } from './database/database.module';
 import { CategoryModule } from './modules/category/category.module';
 import { ProductModule } from './modules/product/product.module';
+import { CustomersModule } from './modules/customers/customers.module'; // ✅ NEW
 
 @Module({
   imports: [
     // ✅ 1. Load environment variables FIRST
     ConfigModule.forRoot({
-      isGlobal: true, // Makes ConfigService available everywhere
+      isGlobal: true,
       envFilePath: '.env',
     }),
 
-    // ✅ 2. Setup DatabaseModule with env variables (REPLACES TypeOrmModule.forRoot)
+    // ✅ 2. Setup DatabaseModule with env variables
     DatabaseModule.forRoot({
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '5432', 10),
@@ -36,9 +37,9 @@ import { ProductModule } from './modules/product/product.module';
     // ✅ 4. Feature modules
     OrdersModule,
     PaymentsModule,
-    CategoryModule, // ✅ NEW: Category CRUD
+    CategoryModule,
     ProductModule,
-    // ReceiptsModule, // ⚠️ Temporarily disabled - will rebuild with DatabaseModule.forFeature()
+    CustomersModule, // ✅ NEW: Customer verification
   ],
   controllers: [AppController],
   providers: [AppService],
