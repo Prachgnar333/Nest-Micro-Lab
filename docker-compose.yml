@@ -11,6 +11,7 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
 
+  # ✅ API Gateway with its Postgres DB
   api-gateway:
     build:
       context: ./api-gateway
@@ -29,9 +30,71 @@ services:
       DB_NAME: nest_lab
     volumes:
       - ./api-gateway:/app
+      - /app/node_modules
     depends_on:
       - rabbitmq
       - postgres
+
+  # ✅ NEW: Auth Service with its own Postgres DB
+  auth-service:
+    build:
+      context: ./apps/auth-service
+      dockerfile: Dockerfile.dev
+    container_name: auth-service
+    command: npm run start:dev
+    ports:
+      - "3001:3000"
+    environment:
+      # Database connection
+      DB_HOST: auth-db
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: auth_db
+      
+      # JWT secrets (we'll use these later)
+      JWT_ACCESS_SECRET: "your-super-secret-access-key-change-in-production"
+      JWT_REFRESH_SECRET: "your-super-secret-refresh-key-change-in-production"
+      JWT_ACCESS_EXPIRATION: "15m"
+      JWT_REFRESH_EXPIRATION: "7d"
+      
+      # RabbitMQ (if needed for future microservices communication)
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      
+      # Development
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./apps/auth-service:/app
+      - /app/node_modules
+    depends_on:
+      - auth-db
+      - rabbitmq
+
+  # ✅ Postgres for API Gateway
+  postgres:
+    image: postgres:16
+    container_name: nest-lab-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: nest_lab
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # ✅ NEW: Postgres for Auth Service
+  auth-db:
+    image: postgres:16
+    container_name: auth-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_db
+    ports:
+      - "5433:5432" # Different host port to avoid conflict
+    volumes:
+      - auth-pgdata:/var/lib/postgresql/data
 
   # order-worker:
   #   build: ./order-worker
@@ -45,18 +108,6 @@ services:
   #   depends_on:
   #     - rabbitmq
 
-  # ✅ UPDATED: PostgreSQL for Practice 9
-  postgres:
-    image: postgres:16
-    container_name: nest-lab-postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: nest_lab
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
 volumes:
   pgdata:
+  auth-pgdata: # ✅ NEW: Separate volume for auth database

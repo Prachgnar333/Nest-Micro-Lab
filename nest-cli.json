@@ -1,0 +1,26 @@
+{
+  "monorepo": true,
+  "projects": {
+    "api-gateway": {
+      "type": "application",
+      "root": "apps/api-gateway",
+      "entryFile": "main",
+      "sourceRoot": "apps/api-gateway/src"
+    },
+    "auth-service": {
+      "type": "application",
+      "root": "apps/auth-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/auth-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/auth-service/tsconfig.app.json"
+      }
+    },
+    "order_worker": {
+      "type": "application",
+      "root": "apps/order_worker",
+      "entryFile": "main",
+      "sourceRoot": "apps/order_worker/src"
+    }
+  }
+}
