@@ -1,113 +1,120 @@
-version: "3.9"
-
 services:
+  # ===== MESSAGE QUEUE =====
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672" # AMQP
-      - "15672:15672" # Management UI
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # ✅ API Gateway with its Postgres DB
-  api-gateway:
-    build:
-      context: ./api-gateway
-      dockerfile: Dockerfile.dev
-    container_name: api-gateway
-    ports:
-      - "3000:3000"
+  # ===== SHARED DATABASE =====
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
     environment:
-      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
-      CHOKIDAR_USEPOLLING: "true"
-      API_KEY: "your-secret-api-key-123"
-      DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_USER: postgres
-      DB_PASS: postgres
-      DB_NAME: nest_lab
+      POSTGRES_DB: ecom
+      POSTGRES_USER: ecom
+      POSTGRES_PASSWORD: ecom
+    ports:
+      - "5432:5432"
     volumes:
-      - ./api-gateway:/app
-      - /app/node_modules
-    depends_on:
-      - rabbitmq
-      - postgres
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecom"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # ✅ NEW: Auth Service with its own Postgres DB
+  # ===== MICROSERVICES =====
+  
+  # Auth Service
   auth-service:
     build:
       context: ./apps/auth-service
       dockerfile: Dockerfile.dev
     container_name: auth-service
     command: npm run start:dev
-    ports:
-      - "3001:3000"
+    env_file: .env
     environment:
-      # Database connection
-      DB_HOST: auth-db
-      DB_PORT: "5432"
-      DB_USER: postgres
-      DB_PASS: postgres
-      DB_NAME: auth_db
-      
-      # JWT secrets (we'll use these later)
-      JWT_ACCESS_SECRET: "your-super-secret-access-key-change-in-production"
-      JWT_REFRESH_SECRET: "your-super-secret-refresh-key-change-in-production"
-      JWT_ACCESS_EXPIRATION: "15m"
-      JWT_REFRESH_EXPIRATION: "7d"
-      
-      # RabbitMQ (if needed for future microservices communication)
-      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
-      
-      # Development
-      CHOKIDAR_USEPOLLING: "true"
+      # Override with specific values
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ecom
+      DB_USER: ecom
+      DB_PASS: ecom
+    ports:
+      - "3001:3001"
     volumes:
       - ./apps/auth-service:/app
       - /app/node_modules
     depends_on:
-      - auth-db
-      - rabbitmq
+      postgres:
+        condition: service_healthy
 
-  # ✅ Postgres for API Gateway
-  postgres:
-    image: postgres:16
-    container_name: nest-lab-postgres
+  # Order Worker
+  order-worker:
+    build:
+      context: ./apps/order-worker
+      dockerfile: Dockerfile.dev
+    container_name: order-worker
+    command: npm run start:dev
+    env_file: .env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: nest_lab
+      PORT: 3002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ecom
+      DB_USER: ecom
+      DB_PASS: ecom
     ports:
-      - "5432:5432"
+      - "3002:3002"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ./apps/order-worker:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
-  # ✅ NEW: Postgres for Auth Service
-  auth-db:
-    image: postgres:16
-    container_name: auth-db
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./apps/api-gateway
+      dockerfile: Dockerfile.dev
+    container_name: api-gateway
+    env_file: .env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: auth_db
+      # Override with specific values
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ecom
+      DB_USER: ecom
+      DB_PASS: ecom
+      AUTH_SERVICE_URL: http://auth-service:3001
+      ORDER_SERVICE_URL: http://order-worker:3002
     ports:
-      - "5433:5432" # Different host port to avoid conflict
+      - "3000:3000"
     volumes:
-      - auth-pgdata:/var/lib/postgresql/data
-
-  # order-worker:
-  #   build: ./order-worker
-  #   container_name: order-worker
-  #   command: npm run start:dev
-  #   environment:
-  #     RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
-  #   volumes:
-  #     - ./order-worker:/app
-  #     - /app/node_modules
-  #   depends_on:
-  #     - rabbitmq
+      - ./apps/api-gateway:/app
+      - /app/node_modules
+    depends_on:
+      auth-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
 
 volumes:
   pgdata:
-  auth-pgdata: # ✅ NEW: Separate volume for auth database

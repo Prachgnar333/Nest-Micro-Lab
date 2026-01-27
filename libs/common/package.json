@@ -1,0 +1,7 @@
+{
+  "name": "@ecom/common",
+  "version": "1.0.0",
+  "description": "Shared utilities, DTOs, and interfaces for ecom-microservices",
+  "main": "index.ts",
+  "types": "index.ts"
+}

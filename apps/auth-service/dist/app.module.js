@@ -7,31 +7,30 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
-const admin_module_1 = require("./admin/admin.module");
-const orders_module_1 = require("./orders/orders.module");
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
-const database_module_1 = require("./database/database.module");
-const auth_module_1 = require("./auth/auth.module");
-const users_module_1 = require("./users/users.module");
-const rbac_module_1 = require("./rbac/rbac.module");
+const jwt_1 = require("@nestjs/jwt");
+const passport_1 = require("@nestjs/passport");
+const auth_controller_1 = require("./auth.controller");
+const auth_service_1 = require("./auth.service");
+const jwt_strategy_1 = require("./jwt.strategy");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            config_1.ConfigModule.forRoot({
-                isGlobal: true,
-                envFilePath: '.env',
+            config_1.ConfigModule.forRoot({ isGlobal: true }),
+            passport_1.PassportModule,
+            jwt_1.JwtModule.registerAsync({
+                useFactory: () => ({
+                    secret: process.env.JWT_SECRET,
+                    signOptions: { expiresIn: process.env.JWT_EXPIRES_IN ?? "1h" },
+                }),
             }),
-            database_module_1.DatabaseModule,
-            auth_module_1.AuthModule,
-            users_module_1.UsersModule,
-            rbac_module_1.RbacModule,
-            admin_module_1.AdminModule,
-            orders_module_1.OrdersModule,
         ],
+        controllers: [auth_controller_1.AuthController],
+        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

@@ -1,4 +1,22 @@
 {
+  "name": "ecom-microservices",
+  "version": "1.0.0",
+  "description": "E-Commerce Microservices Architecture with NestJS",
+  "workspaces": [
+    "apps/*",
+    "libs/*"
+  ],
+  "scripts": {
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "logs": "docker-compose logs -f",
+    "logs:gateway": "docker-compose logs -f api-gateway",
+    "logs:auth": "docker-compose logs -f auth-service",
+    "logs:orders": "docker-compose logs -f order-worker",
+    "build": "docker-compose up --build -d",
+    "restart": "docker-compose restart",
+    "ps": "docker-compose ps"
+  },
   "dependencies": {
     "@nestjs/config": "^4.0.2",
     "@nestjs/jwt": "^11.0.2",
@@ -15,8 +33,5 @@
   },
   "devDependencies": {
     "@types/node": "^25.0.6"
-  },
-  "scripts": {
-    "seed:rbac": "ts-node src/seed-rbac.ts"
   }
 }

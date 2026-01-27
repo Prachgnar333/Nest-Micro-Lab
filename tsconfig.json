@@ -13,6 +13,10 @@
     "incremental": true,
     "skipLibCheck": true,
     "strict": false,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@ecom/common": ["libs/common/src"],
+      "@ecom/common/*": ["libs/common/src/*"]
+    }
   }
 }

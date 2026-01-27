@@ -1,22 +1,10 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { AppModule } from './app.module';
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
-
   app.enableCors();
-
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
-  console.log(`íº€ Auth Service running on http://localhost:${port}`);
+  app.use(require("express").json({ limit: "1mb" }));
+  await app.listen(process.env.AUTH_PORT ?? 3001);
 }
 bootstrap();

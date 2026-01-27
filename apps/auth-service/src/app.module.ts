@@ -1,29 +1,23 @@
-import { AdminModule } from './admin/admin.module';
-import { OrdersModule } from './orders/orders.module';
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from './database/database.module';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { RbacModule } from './rbac/rbac.module';
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { JwtModule } from "@nestjs/jwt";
+import { PassportModule } from "@nestjs/passport";
+import { AuthController } from "./auth.controller";
+import { AuthService } from "./auth.service";
+import { JwtStrategy } from "./jwt.strategy";
 
 @Module({
   imports: [
-    // ✅ Load environment variables first
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
+    ConfigModule.forRoot({ isGlobal: true }),
+    PassportModule,
+    JwtModule.registerAsync({
+      useFactory: () => ({
+        secret: process.env.JWT_SECRET,
+        signOptions: { expiresIn: process.env.JWT_EXPIRES_IN ?? "1h" },
+      }),
     }),
-
-    // ✅ Use DatabaseModule instead of inline TypeORM config
-    DatabaseModule,
-
-    // ✅ Feature modules
-    AuthModule,
-    UsersModule,
-    RbacModule,
-    AdminModule,    
-    OrdersModule,
   ],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy],
 })
 export class AppModule {}
