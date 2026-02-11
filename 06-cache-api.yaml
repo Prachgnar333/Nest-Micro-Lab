@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cache-api
+  namespace: lab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cache-api
+  template:
+    metadata:
+      labels:
+        app: cache-api
+    spec:
+      containers:
+        - name: api
+          image: node:22-alpine
+          ports:
+            - containerPort: 3000
+          env:
+            - name: REDIS_HOST
+              value: "redis.lab.svc.cluster.local"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: TTL_SECONDS
+              value: "10"
+          command: ["sh","-c"]
+          args:
+            - |
+              apk add --no-cache build-base python3 make g++  # ADD THIS
+              cat > server.js <<'JS'
+              const http = require('http');
+              const { createClient } = require('redis');
+              const redisHost = process.env.REDIS_HOST;
+              const redisPort = process.env.REDIS_PORT || 6379;
+              const ttl = parseInt(process.env.TTL_SECONDS || '10', 10);
+              const client = createClient({ url: `redis://${redisHost}:${redisPort}` });
+              client.on('error', (e) => console.error('redis error', e));
+              function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+              (async () => {
+                await client.connect();
+                const server = http.createServer(async (req, res) => {
+                  const url = new URL(req.url, 'http://localhost');
+                  if (url.pathname === '/health') { res.writeHead(200); return res.end('ok'); }
+                  if (url.pathname === '/expensive') {
+                    const key = url.searchParams.get('key') || 'default';
+                    const cacheKey = `expensive:${key}`;
+                    const cached = await client.get(cacheKey);
+                    if (cached) {
+                      res.writeHead(200, {'content-type':'application/json'});
+                      return res.end(JSON.stringify({ source:'cache', key, value: cached }));
+                    }
+                    // simulate expensive compute (500ms)
+                    await sleep(500);
+                    const value = `value_${key}_${Date.now()}`;
+                    await client.setEx(cacheKey, ttl, value);
+                    res.writeHead(200, {'content-type':'application/json'});
+                    return res.end(JSON.stringify({ source:'compute', key, value }));
+                  }
+                  res.writeHead(404); res.end('not found');
+                });
+                server.listen(3000, () => console.log('listening on 3000'));
+              })();
+              JS
+              npm init -y >/dev/null 2>&1
+              npm i redis@4 >/dev/null 2>&1
+              node server.js
+          readinessProbe:
+            httpGet: { path: /health, port: 3000 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests: { cpu: "50m", memory: "128Mi" }
+            limits: { cpu: "300m", memory: "256Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cache-api
+  namespace: lab
+spec:
+  selector:
+    app: cache-api
+  ports:
+    - port: 80
+      targetPort: 3000
